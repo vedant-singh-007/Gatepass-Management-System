@@ -8,7 +8,7 @@ const GuardDashboard = () => {
 
   // Fetch all pending requests
   useEffect(() => {
-    fetch('http://localhost:3000/guards/requests',{method: 'GET'})
+    fetch('https://gatepass-management-system-wv1t.onrender.com/guards/requests',{method: 'GET'})
       .then(res => res.json())
       .then(data => {
         setRequests(data);
@@ -22,7 +22,7 @@ const GuardDashboard = () => {
   
   const handleApprove = async (requestId) => {
     try {
-      const res = await fetch(`http://localhost:3000/requests/${requestId}`, {
+      const res = await fetch(`https://gatepass-management-system-wv1t.onrender.com/requests/${requestId}`, {
         method: 'PATCH'
       });
 

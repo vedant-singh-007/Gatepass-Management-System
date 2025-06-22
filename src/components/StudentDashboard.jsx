@@ -16,7 +16,7 @@ useEffect(() => {
   setUsername(storedId || 'Student'); // ✅ use studentId as fallback for username
 
   if (storedId) {
-    fetch(`http://localhost:3000/student/requests/${storedId}`, {
+    fetch(`https://gatepass-management-system-wv1t.onrender.com/student/requests/${storedId}`, {
       method: 'GET'
     })
       .then((res) => res.json())
