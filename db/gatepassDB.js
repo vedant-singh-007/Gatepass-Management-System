@@ -1,15 +1,18 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const databaseconnection = mongoose.createConnection('mongodb://localhost:27017/GatePassDatabase', {
-
-
-});
-databaseconnection.on('connected', () => {
-  console.log('GatePass DB connected');
-});
-
-databaseconnection.on('error', (err) => {
-  console.error('GatePass DB connection error:', err);
+const gatepassConnection = mongoose.createConnection(process.env.MONGO_URI_GATEPASS, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
-export default databaseconnection;
+gatepassConnection.on('connected', () => {
+  console.log('✅ Gate Pass DB connected');
+});
+
+gatepassConnection.on('error', (err) => {
+  console.error('❌ Gate Pass DB connection error:', err);
+});
+
+export default gatepassConnection;
