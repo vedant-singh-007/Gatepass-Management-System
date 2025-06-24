@@ -1,36 +1,71 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import '../index.css';
 import '../App.css';
 
 const GuardDashboard = () => {
   const [requests, setRequests] = useState([]);
+  const navigate = useNavigate();
 
-  // Fetch all pending requests
+  // 🔐 Fetch all pending requests securely
   useEffect(() => {
-    fetch('https://gatepass-management-system-wv1t.onrender.com/guards/requests',{method: 'GET'})
-      .then(res => res.json())
-      .then(data => {
+    const fetchRequests = async () => {
+      const token = localStorage.getItem('guardToken');
+
+      if (!token) {
+        alert('You are not logged in. Please login again.');
+        return navigate('/guard-login');
+      }
+
+      try {
+        const res = await fetch('https://gatepass-management-system-ny3p.onrender.com/guards/requests', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          alert("Unauthorized. Please login again.");
+          localStorage.removeItem('guardToken');
+          return navigate('/guard-login');
+        }
+
+        const data = await res.json();
         setRequests(data);
         console.log("Fetched requests:", data);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Error fetching requests:", err);
-      });
-  }, []);
+      }
+    };
 
-  
+    fetchRequests();
+  }, [navigate]);
+
+  // 🔐 Approve gatepass
   const handleApprove = async (requestId) => {
+    const token = localStorage.getItem('guardToken');
+
+    if (!token) {
+      alert('You are not logged in. Please login again.');
+      return navigate('/guard-login');
+    }
+
     try {
-      const res = await fetch(`https://gatepass-management-system-wv1t.onrender.com/requests/${requestId}`, {
-        method: 'PATCH'
+      const res = await fetch(`https://gatepass-management-system-ny3p.onrender.com/requests/${requestId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (res.ok) {
-        // remove the approved request from the local state
         setRequests(prev => prev.filter(req => req._id !== requestId));
       } else {
-        console.error("Failed to approve");
+        const errorData = await res.json();
+        console.error("Failed to approve:", errorData);
+        alert(errorData.error || "Failed to approve request.");
       }
     } catch (err) {
       console.error("Error approving request:", err);

@@ -9,15 +9,22 @@ function StudentDashboard() {
   const [gatepassRequests, setGatepassRequests] = useState([]);
   const navigate = useNavigate();
 
-useEffect(() => {
-  const storedId = localStorage.getItem('studentId');
-  console.log("Fetching requests for studentId:", storedId);
+  useEffect(() => {
+    const storedId = localStorage.getItem('studentId');
+    const token = localStorage.getItem('studentToken');
 
-  setUsername(storedId || 'Student'); // ✅ use studentId as fallback for username
+    if (!storedId || !token) {
+      alert("You are not logged in. Please login again.");
+      return navigate('/');
+    }
 
-  if (storedId) {
-    fetch(`https://gatepass-management-system-wv1t.onrender.com/student/requests/${storedId}`, {
-      method: 'GET'
+    setUsername(storedId);
+
+    fetch(`https://gatepass-management-system-ny3p.onrender.com/student/requests/${storedId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ Only addition
+      }
     })
       .then((res) => res.json())
       .then((data) => {
@@ -26,12 +33,13 @@ useEffect(() => {
       })
       .catch((err) => {
         console.error('Error fetching gatepass requests:', err);
+        alert("Something went wrong or your session expired. Please login again.");
+        navigate('/');
       });
-  }
-}, []);
-
+  }, [navigate]);
 
   return (
+    // Your original JSX layout — untouched
     <div className="min-h-screen bg-gradient-to-r from-slate-100 to-blue-100 flex flex-col items-center justify-center p-6 font-sans">
       <motion.div
         initial={{ opacity: 0, y: -30 }}

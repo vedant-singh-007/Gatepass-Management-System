@@ -15,35 +15,40 @@ const GatePassForm = () => {
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
-    try {
-      const studentId = localStorage.getItem('studentId');
-      if (!studentId) {
-        alert("You are not logged in. Please login again.");
-        return navigate('/'); // Redirect to login if not logged in
-      }
+  try {
+    const studentId = localStorage.getItem('studentId');
+    const token = localStorage.getItem('studentToken'); // ✅ New
 
-      const fullData = { ...data, studentId };
-
-      const response = await fetch('https://gatepass-management-system-wv1t.onrender.com/student/form', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fullData),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        alert("Gate pass request submitted successfully!");
-        reset();
-        navigate('/student-dashboard');
-      } else {
-        alert(result.error || "Request failed. You may already have a pending request.");
-      }
-    } catch (error) {
-      console.error("Error during form submission:", error);
-      alert("Something went wrong. Please try again.");
+    if (!studentId || !token) {
+      alert("You are not logged in. Please login again.");
+      return navigate('/'); // Redirect to login
     }
-  };
+
+    const fullData = { ...data, studentId };
+
+    const response = await fetch('https://gatepass-management-system-ny3p.onrender.com/student/form', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`, // ✅ JWT sent to backend
+      },
+      body: JSON.stringify(fullData),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert("Gate pass request submitted successfully!");
+      reset();
+      navigate('/student-dashboard');
+    } else {
+      alert(result.error || "Request failed. You may already have a pending request.");
+    }
+  } catch (error) {
+    console.error("Error during form submission:", error);
+    alert("Something went wrong. Please try again.");
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 flex items-center justify-center p-4">

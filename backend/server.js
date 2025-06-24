@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
+
 dotenv.config();
 
 import studentRoutes from '../routes/student.js';

@@ -9,7 +9,7 @@ function GuardRegister() {
 
   const onSubmit = async (data) => {
     try {
-      const response = await fetch('https://gatepass-management-system-wv1t.onrender.com/guards/register', {
+      const response = await fetch('https://gatepass-management-system-ny3p.onrender.com/guards/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)

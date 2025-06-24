@@ -1,8 +1,8 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import '../index.css'; // Ensure you have Tailwind CSS set up in your project
-import '../App.css'; // Ensure you have Tailwind CSS set up in your project
+import '../index.css';
+import '../App.css';
 
 function StudentLogin() {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -10,7 +10,7 @@ function StudentLogin() {
 
   const onSubmit = async (data) => {
     try {
-      const response = await fetch('https://gatepass-management-system-wv1t.onrender.com/student/login', {
+      const response = await fetch('https://gatepass-management-system-ny3p.onrender.com/student/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -20,7 +20,11 @@ function StudentLogin() {
 
       if (response.ok) {
         console.log("Login successful:", result);
+
+        // ✅ Save both ID and token
         localStorage.setItem('studentId', result.studentId);
+        localStorage.setItem('studentToken', result.token);  // <-- Token saved here
+
         navigate('/student-dashboard'); 
       } else {
         alert(result.error || 'Login failed');
@@ -75,7 +79,6 @@ function StudentLogin() {
               Register Now
             </span>
           </p>
-          
         </div>
       </div>
     </div>

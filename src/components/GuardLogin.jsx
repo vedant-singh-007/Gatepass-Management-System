@@ -1,8 +1,8 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import '../index.css'; // Ensure you have Tailwind CSS set up in your project
-import '../App.css'; // Ensure you have Tailwind CSS set up in your project
+import '../index.css';
+import '../App.css';
 
 function GuardLogin() {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -10,7 +10,7 @@ function GuardLogin() {
 
   const onSubmit = async (data) => {
     try {
-      const response = await fetch('https://gatepass-management-system-wv1t.onrender.com/guards/login', {
+      const response = await fetch('https://gatepass-management-system-ny3p.onrender.com/guards/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -19,6 +19,10 @@ function GuardLogin() {
       const result = await response.json();
 
       if (response.ok) {
+        // ✅ Save token and guardId
+        localStorage.setItem('guardToken', result.token);
+        localStorage.setItem('guardId', data.guardId);
+        
         console.log("Login successful:", result);
         navigate('/guard-dashboard'); 
       } else {
@@ -42,7 +46,7 @@ function GuardLogin() {
               {...register('guardId', { required: true })}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:outline-none"
             />
-            {errors.studentId && (
+            {errors.guardId && (
               <p className="text-sm text-red-500 mt-1">Guard ID is required</p>
             )}
           </div>
@@ -74,7 +78,6 @@ function GuardLogin() {
               Register Now
             </span>
           </p>
-          
         </div>
       </div>
     </div>

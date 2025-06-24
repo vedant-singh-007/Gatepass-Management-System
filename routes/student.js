@@ -1,15 +1,19 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
-import getStudentModel from '../models/StudentloginSystem.js'; // Import the function that returns the model
-import studentConnection from '../db/studentDB.js'; // Import the Mongoose connection for the student DB
-import getDatabaseModel from '../models/Gatepass.js';
-import databaseConnection from '../db/gatepassDB.js'; // Import the Mongoose connection for the gate pass DB
+import jwt from 'jsonwebtoken';
 
-const Student = getStudentModel(studentConnection); // Get the Student model using the connection
+import getStudentModel from '../models/StudentloginSystem.js';
+import studentConnection from '../db/studentDB.js';
+import getDatabaseModel from '../models/Gatepass.js';
+import databaseConnection from '../db/gatepassDB.js';
+import { authenticateJWT } from '../middleware/auth.js';
+
+const Student = getStudentModel(studentConnection);
+const GatePass = getDatabaseModel(databaseConnection);
+
 const router = express.Router();
 
-const GatePass = getDatabaseModel(databaseConnection); // Get the GatePass model using
-
+// ✅ PUBLIC: Register
 router.post('/register', async (req, res) => {
   const { studentId, password } = req.body;
   try {
@@ -29,56 +33,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/form', async (req, res) => {
-  const {
-    studentId,
-    name,
-    hostelBlock,
-    date,
-    time,
-    purpose,
-    luggages,
-    destination, // Assuming destination is also part of the form
-    status = 'Pending'
-  } = req.body;
-
-  try {
-    // Optional: check if student exists before accepting the gate pass
-    const student = await Student.findOne({ studentId });
-    if (!student) {
-      return res.status(404).json({ error: 'Student not registered' });
-    }
-    const existingRequest = await GatePass.findOne({ studentId: req.body.studentId, status: 'Pending' });
-    if (existingRequest) {
-      return res.status(400).json({ error: 'You already have a pending request.' });
-    }
-
-
-    // Create a new gate pass request
-    const newGatePass = new GatePass({
-      studentId: studentId,
-      name,
-      hostelBlock,
-      date,
-      time,
-      purpose,
-      luggages,
-      destination,
-      status,
-    });
-
-    await newGatePass.save();
-
-    res.status(201).json({ message: 'Gate pass request submitted successfully' });
-    //go back to student dashboard and add this at the top of lists of gate passes
-  } catch (err) {
-    console.error("Error during gate pass submission:", err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-
-
+// ✅ PUBLIC: Login and Issue JWT
 router.post('/login', async (req, res) => {
   const { studentId, password } = req.body;
   try {
@@ -92,21 +47,72 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid password' });
     }
 
-    res.status(200).json({ message: 'Login successful', studentId: student.studentId });
+    const token = jwt.sign(
+      { studentId: student.studentId, role: 'student' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    res.status(200).json({ message: 'Login successful', token });
   } catch (err) {
     console.error("Error during login:", err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.get('/requests/:studentId', async (req, res) => {
-  const { studentId } = req.params;
+// 🔒 Apply Authentication Middleware Globally Below This Line
+router.use(authenticateJWT);
 
-  if (!studentId) {
-    return res.status(400).json({ error: 'Missing studentId parameter' });
+// ✅ PROTECTED: Submit Gatepass
+router.post('/form', async (req, res) => {
+  const {
+    name,
+    hostelBlock,
+    date,
+    time,
+    purpose,
+    luggages,
+    destination,
+    status = 'Pending'
+  } = req.body;
+
+  const studentId = req.user.studentId; // Extracted from JWT
+
+  try {
+    const student = await Student.findOne({ studentId });
+    if (!student) {
+      return res.status(404).json({ error: 'Student not registered' });
+    }
+
+    const existingRequest = await GatePass.findOne({ studentId, status: 'Pending' });
+    if (existingRequest) {
+      return res.status(400).json({ error: 'You already have a pending request.' });
+    }
+
+    const newGatePass = new GatePass({
+      studentId,
+      name,
+      hostelBlock,
+      date,
+      time,
+      purpose,
+      luggages,
+      destination,
+      status,
+    });
+
+    await newGatePass.save();
+
+    res.status(201).json({ message: 'Gate pass request submitted successfully' });
+  } catch (err) {
+    console.error("Error during gate pass submission:", err);
+    res.status(500).json({ error: 'Internal server error' });
   }
+});
 
-  const GatePass = getDatabaseModel(databaseConnection);
+// ✅ PROTECTED: View Gatepass Requests
+router.get('/requests', async (req, res) => {
+  const studentId = req.user.studentId;
 
   try {
     const requests = await GatePass.find({ studentId });
