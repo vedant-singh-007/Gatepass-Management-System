@@ -19,7 +19,7 @@ const GuardDashboard = () => {
       }
 
       try {
-        const res = await fetch('https://gatepass-management-system-ny3p.onrender.com/guards/requests', {
+        const res = await fetch('https://gatepass-management-system-6obw.onrender.com/guards/requests', {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,

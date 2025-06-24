@@ -53,7 +53,12 @@ router.post('/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.status(200).json({ message: 'Login successful', token });
+    res.status(200).json({
+  message: 'Login successful',
+  token,
+  guardId: guard.guardId
+});
+
   } catch (err) {
     console.error("Error during login:", err);
     res.status(500).json({ error: 'Internal server error' });
